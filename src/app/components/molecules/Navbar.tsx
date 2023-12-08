@@ -1,6 +1,7 @@
 import { SignInButton, SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 import Link from "next/link";
 import React from "react";
+import Cart from "../atoms/Cart";
 
 // import { Container } from './styles';
 
@@ -11,9 +12,10 @@ export const Navbar: React.FC = () => {
         href="/"
         className="uppercase font-bold text-md h-12 flex items-center"
       >
-        Next Store
+        Next
       </Link>
       <div className="flex items-center gap-8">
+        <Cart />
         <SignedIn>
           <UserButton />
         </SignedIn>
