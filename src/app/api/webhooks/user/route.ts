@@ -7,12 +7,17 @@ import { Webhook, WebhookRequiredHeaders } from "svix";
 const webhookSecret = process.env.CLERK_WEBHOOK_SECRET || "";
 
 type EventType = "user.created" | "user.updated" | "*";
+type Event = {
+  data: EventDataType;
+  object: "event";
+  type: EventType;
+};
 
 type EventDataType = {
   id: string;
   first_name: string;
   last_name: string;
-  email_addressess: EmailAddressType[];
+  email_addresses: EmailAddressType[];
   primary_email_address_id: string;
   attributes: Record<string, string | number>;
 };
@@ -22,44 +27,37 @@ type EmailAddressType = {
   email_address: string;
 };
 
-type Event = {
-  type: EventType;
-  data: EventDataType;
-  object: "event";
-};
-
 async function handler(request: Request) {
   const payload = await request.json();
-  const headerList = headers();
-
-  const heads: WebhookRequiredHeaders = {
-    "svix-signature": headerList.get("svix-signature") || "",
-    "svix-id": headerList.get("svix-id") || "",
-    "svix-timestamp": headerList.get("svix-timestamp") || "",
+  const headersList = headers();
+  const heads = {
+    "svix-id": headersList.get("svix-id"),
+    "svix-timestamp": headersList.get("svix-timestamp"),
+    "svix-signature": headersList.get("svix-signature"),
   };
   const wh = new Webhook(webhookSecret);
   let evt: Event | null = null;
+
   try {
     evt = wh.verify(
       JSON.stringify(payload),
       heads as IncomingHttpHeaders & WebhookRequiredHeaders
     ) as Event;
-  } catch (e) {
-    console.log((e as Error).message);
+  } catch (err) {
+    console.error((err as Error).message);
     return NextResponse.json({}, { status: 400 });
   }
 
   const eventType: EventType = evt.type;
-
   if (eventType === "user.created" || eventType === "user.updated") {
     const {
       id,
       first_name,
       last_name,
-      email_addressess,
+      email_addresses,
       primary_email_address_id,
       ...attributes
-    } = evt.data;
+    }: any = evt.data;
 
     await prisma.user.upsert({
       where: { externalId: id as string },
@@ -72,6 +70,7 @@ async function handler(request: Request) {
       },
     });
   }
+
   return NextResponse.json({}, { status: 200 });
 }
 
