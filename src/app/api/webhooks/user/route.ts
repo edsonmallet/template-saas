@@ -1,9 +1,10 @@
-import { Event, EventType } from "@/schemas";
-import { api } from "@/trpc/server";
 import { IncomingHttpHeaders } from "http";
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { Webhook, WebhookRequiredHeaders } from "svix";
+
+import { Event, EventType } from "@/schemas";
+import { api } from "@/trpc/server";
 
 const webhookSecret = process.env.CLERK_WEBHOOK_SECRET || "";
 

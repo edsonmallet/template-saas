@@ -1,5 +1,6 @@
 import { postRouter } from "@/server/api/routers/post";
 import { createTRPCRouter } from "@/server/api/trpc";
+
 import { productRouter } from "./routers/product";
 import { userRouter } from "./routers/user";
 
