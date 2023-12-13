@@ -1,31 +1,11 @@
-import { prisma } from "@/lib";
+import { Event, EventType } from "@/schemas";
+import { api } from "@/trpc/server";
 import { IncomingHttpHeaders } from "http";
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { Webhook, WebhookRequiredHeaders } from "svix";
 
 const webhookSecret = process.env.CLERK_WEBHOOK_SECRET || "";
-
-type EventType = "user.created" | "user.updated" | "*";
-type Event = {
-  data: EventDataType;
-  object: "event";
-  type: EventType;
-};
-
-type EventDataType = {
-  id: string;
-  first_name: string;
-  last_name: string;
-  email_addresses: EmailAddressType[];
-  primary_email_address_id: string;
-  attributes: Record<string, string | number>;
-};
-
-type EmailAddressType = {
-  id: string;
-  email_address: string;
-};
 
 async function handler(request: Request) {
   const payload = await request.json();
@@ -48,7 +28,7 @@ async function handler(request: Request) {
     return NextResponse.json({}, { status: 400 });
   }
 
-  const eventType: EventType = evt.type;
+  const eventType: EventType = evt.type as EventType;
   if (eventType === "user.created" || eventType === "user.updated") {
     const {
       id,
@@ -59,15 +39,9 @@ async function handler(request: Request) {
       ...attributes
     }: any = evt.data;
 
-    await prisma.user.upsert({
-      where: { externalId: id as string },
-      create: {
-        externalId: id as string,
-        attributes,
-      },
-      update: {
-        attributes,
-      },
+    await api.user.upsert.query({
+      where: id as string,
+      attributes,
     });
   }
 
