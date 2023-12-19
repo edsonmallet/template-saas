@@ -1,7 +1,7 @@
 import "./globals.css";
 
 import { ptBR } from "@clerk/localizations";
-import { ClerkProvider } from "@clerk/nextjs";
+import { auth, ClerkProvider } from "@clerk/nextjs";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { cookies } from "next/headers";
@@ -24,13 +24,17 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const { userId } = auth();
   return (
     <ClerkProvider localization={ptBR}>
       <html lang="pt-Br">
         <body className={inter.className}>
           <Navbar />
           <div className="bg-slate-700 h-screen p-16">
-            <TRPCReactProvider cookies={cookies().toString()}>
+            <TRPCReactProvider
+              cookies={cookies().toString()}
+              userId={userId as string}
+            >
               {children}
             </TRPCReactProvider>
           </div>
